@@ -1,6 +1,5 @@
 from __future__ import print_function
-from datetime import datetime
-from dateutil import parser, relativedelta, tz
+from dateutil import parser, relativedelta
 from boto3 import client
 
 # List of database identifiers, or "all" for all databases
@@ -10,11 +9,8 @@ INSTANCES = [""]
 # The number of months to keep ONE snapshot per month
 MONTHS = 0
 
-# AWS region in which the snapshots exist
+# AWS region in which the db instances exist
 REGION = "us-east-1"
-
-# The timezone in which daily snapshots will be kept at midnight
-TIMEZONE = "UTC"
 
 
 def copy_snapshots(rds, snaps):
@@ -38,7 +34,7 @@ def purge_snapshots(rds, id, snaps, counts):
     print("---- RESULTS FOR {} ({} snapshots) ----".format(id, len(snaps)))
 
     for snap in snaps:
-        snap_date = snap['SnapshotCreateTime'].astimezone(tz.gettz(TIMEZONE))
+        snap_date = snap['SnapshotCreateTime']
         snap_age = NOW - snap_date
         # Monthly
         type_str = "month"
@@ -103,7 +99,7 @@ def main(event, context):
     global NOOP
     global NOT_REALLY_STR
 
-    NOW = parser.parse(event['time']).astimezone(tz.gettz(TIMEZONE))
+    NOW = parser.parse(event['time'])
     DELETE_BEFORE_DATE = (NOW - relativedelta.relativedelta(months=MONTHS))
     NOOP = event['noop'] if 'noop' in event else False
     NOT_REALLY_STR = " (not really)" if NOOP is not False else ""
